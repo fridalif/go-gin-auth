@@ -36,6 +36,11 @@ func runServer(db *gorm.DB, appConfig *config.AppConfig) {
 	mailAuthenticationHandler.RegisterRoutes(auth)
 	activateServiceHandler := handlers.NewActivateHandler(otpService, hashService, jwtService, userService, appConfig)
 	activateServiceHandler.RegisterRoutes(auth)
+	userHandler := handlers.NewUserHandler(userService, jwtService)
+	userHandler.RegisterRoutes(v1)
+
+	auth.GET("/refresh-token", func(c *gin.Context) { handlers.RefreshJWTHandler(c, jwtService) })
+
 	router.Run(fmt.Sprintf(":%s", appConfig.WebPort))
 }
 
