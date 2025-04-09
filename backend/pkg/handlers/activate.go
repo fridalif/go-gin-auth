@@ -140,11 +140,12 @@ func (activateHandler *ActivateHandler) Activate(c *gin.Context) {
 			},
 			"error": nil,
 		})
-		err = activateHandler.otpService.ClearOTP(user)
-		if err != nil {
-			log.Printf("activateHandler.Activate.%s: %v", err.Module, err.ErrorBase)
-		}
-		return
+		go func() {
+			err := activateHandler.otpService.ClearOTP(user)
+			if err != nil {
+				log.Printf("activateHandler.Activate.%s: %v", err.Module, err.ErrorBase)
+			}
+		}()
 	}
 	err = activateHandler.hashService.GenerateHash(user)
 	if err != nil {
@@ -164,10 +165,12 @@ func (activateHandler *ActivateHandler) Activate(c *gin.Context) {
 		},
 		"error": nil,
 	})
-	err = activateHandler.otpService.ClearOTP(user)
-	if err != nil {
-		log.Printf("activateHandler.Activate.%s: %v", err.Module, err.ErrorBase)
-	}
+	go func() {
+		err := activateHandler.otpService.ClearOTP(user)
+		if err != nil {
+			log.Printf("activateHandler.Activate.%s: %v", err.Module, err.ErrorBase)
+		}
+	}()
 }
 
 func (activateHandler *ActivateHandler) Resend(c *gin.Context) {
@@ -272,6 +275,12 @@ func (activateHandler *ActivateHandler) ResetPassword(c *gin.Context) {
 		"body":   gin.H{},
 		"error":  nil,
 	})
+	go func() {
+		err := activateHandler.hashService.ClearHash(user)
+		if err != nil {
+			log.Printf("activateHandler.ResetPassword.%s: %v", err.Module, err.ErrorBase)
+		}
+	}()
 }
 
 func (activateHandler *ActivateHandler) RegisterRoutes(router *gin.RouterGroup) {
