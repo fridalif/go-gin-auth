@@ -8,6 +8,7 @@ import (
 	"hitenok/pkg/repository"
 	"hitenok/pkg/services"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -16,6 +17,19 @@ import (
 
 func runServer(db *gorm.DB, appConfig *config.AppConfig) {
 	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusOK)
+			return
+		}
+
+		c.Next()
+	})
+
 	err := db.AutoMigrate(&domain.User{})
 	if err != nil {
 		log.Fatalf("runserver.AutoMigrate.Error: %v", err)
