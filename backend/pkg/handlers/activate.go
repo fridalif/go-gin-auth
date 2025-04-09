@@ -209,6 +209,14 @@ func (activateHandler *ActivateHandler) Resend(c *gin.Context) {
 	}
 
 	err = activateHandler.otpService.GenerateOTP(user)
+	if err.ErrorBase.Error() == "not now" {
+		c.AbortWithStatusJSON(http.StatusOK, gin.H{
+			"status": http.StatusBadRequest,
+			"body":   gin.H{},
+			"error":  "Wait 5 minutes",
+		})
+		return
+	}
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusInternalServerError,

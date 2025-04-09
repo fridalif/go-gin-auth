@@ -2,6 +2,7 @@ package services
 
 import (
 	"crypto/tls"
+	"fmt"
 	"hitenok/pkg/config"
 	"hitenok/pkg/domain"
 	"hitenok/pkg/repository"
@@ -47,6 +48,9 @@ func (mailOTPService *mailOTPService) ClearOTP(user *domain.User) *domain.MyErro
 }
 
 func (mailOTPService *mailOTPService) GenerateOTP(user *domain.User) *domain.MyError {
+	if user.OTPSpawnedAt.Add(5 * time.Minute).After(time.Now()) {
+		return domain.NewError(fmt.Errorf("not now"), "mailOTPService.GenerateOTP")
+	}
 	otp := make([]byte, 4)
 	for i := range otp {
 		otp[i] = OTPCharset[rand.Intn(len(OTPCharset))]
