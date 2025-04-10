@@ -18,7 +18,7 @@ const (
 
 type OTPServiceI interface {
 	GenerateOTP(user *domain.User) *domain.MyError
-	VerifyOTP(user domain.User, otp string) (bool, *domain.MyError)
+	VerifyOTP(user *domain.User, otp string) (bool, *domain.MyError)
 	SendOTP(user domain.User)
 	ClearOTP(user *domain.User) *domain.MyError
 }
@@ -66,7 +66,7 @@ func (mailOTPService *mailOTPService) GenerateOTP(user *domain.User) *domain.MyE
 	return nil
 }
 
-func (mailOTPService *mailOTPService) VerifyOTP(user domain.User, otp string) (bool, *domain.MyError) {
+func (mailOTPService *mailOTPService) VerifyOTP(user *domain.User, otp string) (bool, *domain.MyError) {
 	if user.OTP == "" {
 		return false, nil
 	}
@@ -79,7 +79,7 @@ func (mailOTPService *mailOTPService) VerifyOTP(user domain.User, otp string) (b
 	}
 	if user.OTP != otp {
 		user.OTPAttempts -= 1
-		err := mailOTPService.repo.SaveUser(&user)
+		err := mailOTPService.repo.SaveUser(user)
 		if err != nil {
 			err.Module = "mailOTPService.VerifyOTP" + err.Module
 			return false, err

@@ -27,7 +27,7 @@ func NewUserRepository(db *gorm.DB, appConfig *config.AppConfig) UserRepositoryI
 
 func (userRepo *userRepository) FindUserById(id uint) (*domain.User, *domain.MyError) {
 	var user domain.User
-	err := userRepo.DB.Where("id = ?", id).Find(&user).Error
+	err := userRepo.DB.Where("id = ?", id).First(&user).Error
 	if err != nil {
 		return &user, domain.NewError(err, "userRepository.FindUserById")
 	}
@@ -36,7 +36,7 @@ func (userRepo *userRepository) FindUserById(id uint) (*domain.User, *domain.MyE
 
 func (userRepository *userRepository) FindUserByEmail(email string) (*domain.User, *domain.MyError) {
 	var user domain.User
-	err := userRepository.DB.Where("email = ?", email).Find(&user).Error
+	err := userRepository.DB.Where("email = ?", email).First(&user).Error
 	if err != nil {
 		return &user, domain.NewError(err, "userRepository.FindUserByEmail")
 	}

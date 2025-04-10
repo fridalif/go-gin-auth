@@ -65,7 +65,7 @@ func (activateHandler *ActivateHandler) Activate(c *gin.Context) {
 		return
 	}
 	user, err := activateHandler.userService.GetUser(activateRequest.UserId)
-	if errors.Is(err.ErrorBase, gorm.ErrRecordNotFound) {
+	if err != nil && errors.Is(err.ErrorBase, gorm.ErrRecordNotFound) {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusBadRequest,
 			"body":   gin.H{},
@@ -82,8 +82,16 @@ func (activateHandler *ActivateHandler) Activate(c *gin.Context) {
 		log.Printf("activateHandler.Activate.%s: %v", err.Module, err.ErrorBase)
 		return
 	}
-	valid, err := activateHandler.otpService.VerifyOTP(*user, activateRequest.OTP)
+	valid, err := activateHandler.otpService.VerifyOTP(user, activateRequest.OTP)
 	if err != nil {
+		if user.OTPAttempts <= 0 {
+			c.AbortWithStatusJSON(http.StatusOK, gin.H{
+				"status": http.StatusInternalServerError,
+				"body":   gin.H{},
+				"error":  "Attemts ended",
+			})
+			return
+		}
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusInternalServerError,
 			"body":   gin.H{},
@@ -146,6 +154,7 @@ func (activateHandler *ActivateHandler) Activate(c *gin.Context) {
 				log.Printf("activateHandler.Activate.%s: %v", err.Module, err.ErrorBase)
 			}
 		}()
+		return
 	}
 	err = activateHandler.hashService.GenerateHash(user)
 	if err != nil {
@@ -190,7 +199,7 @@ func (activateHandler *ActivateHandler) Resend(c *gin.Context) {
 	} else {
 		user, err = activateHandler.userService.GetUser(activateRequest.UserId)
 	}
-	if errors.Is(err.ErrorBase, gorm.ErrRecordNotFound) {
+	if err != nil && errors.Is(err.ErrorBase, gorm.ErrRecordNotFound) {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusBadRequest,
 			"body":   gin.H{},
@@ -209,7 +218,7 @@ func (activateHandler *ActivateHandler) Resend(c *gin.Context) {
 	}
 
 	err = activateHandler.otpService.GenerateOTP(user)
-	if err.ErrorBase.Error() == "not now" {
+	if err != nil && err.ErrorBase.Error() == "not now" {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusBadRequest,
 			"body":   gin.H{},
@@ -249,7 +258,7 @@ func (activateHandler *ActivateHandler) ResetPassword(c *gin.Context) {
 	}
 
 	user, err := activateHandler.userService.GetUser(activateRequest.UserId)
-	if errors.Is(err.ErrorBase, gorm.ErrRecordNotFound) || activateRequest.ResetHash == "" || activateRequest.NewPassword == "" {
+	if (err != nil && errors.Is(err.ErrorBase, gorm.ErrRecordNotFound)) || activateRequest.ResetHash == "" || activateRequest.NewPassword == "" {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusBadRequest,
 			"body":   gin.H{},

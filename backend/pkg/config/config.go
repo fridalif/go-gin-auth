@@ -22,7 +22,8 @@ type AppConfig struct {
 }
 
 func NewAppConfig() (*AppConfig, error) {
-	var functionName string = ""
+	var functionName string = "NewAppConfig"
+
 	err := godotenv.Load()
 	if err != nil {
 		return &AppConfig{}, fmt.Errorf("%s.%s:ERROR: %v", moduleName, functionName, err)

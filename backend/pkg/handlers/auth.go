@@ -51,7 +51,7 @@ func (mailAuthHandler *MailAuthHandler) SignIn(c *gin.Context) {
 	}
 
 	user, err := mailAuthHandler.authenticationService.Authenticate(userRequest.Email, userRequest.Password)
-	if errors.Is(err.ErrorBase, gorm.ErrRecordNotFound) || err.ErrorBase.Error() == "wrong credentials" || err.ErrorBase.Error() == "user is not active" {
+	if err != nil && (errors.Is(err.ErrorBase, gorm.ErrRecordNotFound) || err.ErrorBase.Error() == "wrong credentials" || err.ErrorBase.Error() == "user is not active") {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusUnauthorized,
 			"body":   gin.H{},
@@ -112,7 +112,7 @@ func (mailAuthHandler *MailAuthHandler) SignUp(c *gin.Context) {
 	}
 
 	user, err := mailAuthHandler.authenticationService.Register(userRequest.Email, userRequest.Fullname, userRequest.Password)
-	if err.ErrorBase.Error() == "user already exists" {
+	if err != nil && err.ErrorBase.Error() == "user already exists" {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusBadRequest,
 			"body":   gin.H{},
@@ -120,7 +120,7 @@ func (mailAuthHandler *MailAuthHandler) SignUp(c *gin.Context) {
 		})
 		return
 	}
-	if err.ErrorBase.Error() == "invalid credentials" {
+	if err != nil && err.ErrorBase.Error() == "invalid credentials" {
 		c.AbortWithStatusJSON(http.StatusOK, gin.H{
 			"status": http.StatusBadRequest,
 			"body":   gin.H{},
